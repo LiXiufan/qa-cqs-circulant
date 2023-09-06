@@ -47,19 +47,14 @@ setup(
         # Example
         'scipy>=1.8.0',
         'matplotlib>=3.3.0',
-        'networkx',
         'sympy>=1.10.1',
 
         # Hardware
         'qiskit>=0.41.0',
         'qiskit-terra>=0.17.4',
-        'qiskit-ionq',
         'qiskit-ibm-runtime',
         'qiskit-ibm-provider',
-        'amazon-braket-sdk',
         'qiskit-braket-provider',
-        'qibo',
-        'qibojit',
         'cvxopt'
     ],
     python_requires='>=3.8, <3.11',
