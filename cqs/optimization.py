@@ -74,7 +74,6 @@ def solve_combination_parameters(W, r, which_opt=None):
     else:
         raise ValueError
 
-
     half_var = int(len(comb_params) / 2)
     vars = [0 for _ in range(half_var)]
 
@@ -83,9 +82,12 @@ def solve_combination_parameters(W, r, which_opt=None):
         vars[i] = var
 
     params_array = array(comb_params).reshape(-1, 1)
-    W_array = array(W)
-    r_array = array(r)
-    loss = transpose(params_array) @ W_array @ params_array - 2 * transpose(r_array) @ params_array + 1
+    W_array = array(W / 2)
+    r_array = array(r / (-2)).reshape(-1, 1)
+    print(params_array)
+    print(W_array)
+    print(r_array)
+    loss = abs((transpose(params_array) @ W_array @ params_array - 2 * transpose(r_array) @ params_array + 1).item())
     return loss, vars
 
 

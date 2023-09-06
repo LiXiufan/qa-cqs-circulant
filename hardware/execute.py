@@ -31,16 +31,16 @@ from qiskit import QuantumRegister, ClassicalRegister
 from qiskit import Aer
 from qiskit.circuit.library import QFT
 from numpy import pi
-from qiskit_aer import AerSimulator
+from cqs.mitigation import Pauli_error_mitigate
 from qiskit_ibm_provider import IBMProvider
 
 
-def Hadamard_test_QFT(U_b, q_pow, alpha=1, access=None, shots=1024):
+def Hadamard_test_QFT(U_b, q_pow, alpha=1, access=None, shots=1024, Pauli_mitigate=False, file_name=None):
     if access is None:
-        backend = 'qiskit-aer'
+        access = 'qiskit-aer'
 
-    elif access == 'qiskit-aer':
-        backend = Aer.get_backend('statevector_simulator')
+    if access == 'qiskit-aer':
+        backend = Aer.get_backend('aer_simulator_statevector')
 
     elif access == 'ibmq-statevector':
         provider = IBMProvider(instance='ibm-q/open/main')
@@ -115,4 +115,31 @@ def Hadamard_test_QFT(U_b, q_pow, alpha=1, access=None, shots=1024):
     # Transpile the circuit for Hadamard test
     result = transpile(Hadamard_circuit, backend)
     job = backend.run(result, shots=shots)
-    return backend, job.job_id()
+
+    if access == 'qiskit-aer':
+        out_ = job.result()
+        count = out_.get_counts(result)
+        new_count = {'0': 0, '1': 0}
+        for k in count.keys():
+            new_count[k[-1]] += count[k]
+        count = new_count
+        # file1 = open(file_name, "a")
+        # file1.writelines(["The sampling result is:", str(count), '\n'])
+        # file1.close()
+        if count['0'] == 0:
+            p0 = 0
+            p1 = 1
+        elif count['1'] == 0:
+            p0 = 1
+            p1 = 0
+        else:
+            shots = sum(list(count.values()))
+            p0 = count['0'] / shots
+            p1 = count['1'] / shots
+        if Pauli_mitigate is True:
+            output = Pauli_error_mitigate(p0, p1, file_name)
+        else:
+            output = p0 - p1
+    else:
+        output = job.job_id()
+    return access, output

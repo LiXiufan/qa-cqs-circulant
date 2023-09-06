@@ -78,9 +78,9 @@ def calculate_statistics(backend, jobs_ids, Pauli_mitigate=False, file_name='mes
             for k in count.keys():
                 new_count[k[-1]] += count[k]
             count = new_count
-            file1 = open(file_name, "a")
-            file1.writelines(["The sampling result is:", str(count), '\n'])
-            file1.close()
+            # file1 = open(file_name, "a")
+            # file1.writelines(["The sampling result is:", str(count), '\n'])
+            # file1.close()
             if count['0'] == 0:
                 p0 = 0
                 p1 = 1
@@ -100,7 +100,7 @@ def calculate_statistics(backend, jobs_ids, Pauli_mitigate=False, file_name='mes
     return exps
 
 
-def calculate_W_r(C, U_b, Ansatz_pows, access=None, file_name='message.txt'):
+def calculate_W_r(C, U_b, Ansatz_pows, access=None, shots=1024, Pauli_mitigate=False, file_name='message.txt'):
     r"""
         Calculate the auxiliary system W and r defined in our paper.
     """
@@ -110,63 +110,93 @@ def calculate_W_r(C, U_b, Ansatz_pows, access=None, file_name='message.txt'):
     T = len(Ansatz_pows)
     V_dagger_V = zeros((T, T), dtype='complex128')
 
-    Job_ids_K_R = []
-    Job_ids_K_I = []
-    Job_ids_q_R = []
-    Job_ids_q_I = []
-    for t_1 in range(T):
-        for t_2 in range(T):
-            # Uniform distribution of the shots
-            for k_1 in range(K):
-                for k_2 in range(K):
-                    q_pow = - Ansatz_pows[t_1] - C_pows[k_1] + C_pows[k_2] + Ansatz_pows[t_2]
-                    backend, jobid_R = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access)
-                    backend, jobid_I = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access)
-                    Job_ids_K_R.append(jobid_R)
-                    Job_ids_K_I.append(jobid_I)
-    for t in range(T):
-        for k in range(K):
-            q_pow = Ansatz_pows[t] + C_pows[k]
-            backend, jobid_R = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access)
-            backend, jobid_I = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access)
-            Job_ids_K_R.append(jobid_R)
-            Job_ids_K_I.append(jobid_I)
+    if access is not None:
 
-    exp_K_R = calculate_statistics(backend, Job_ids_K_R, file_name=file_name)
-    exp_K_I = calculate_statistics(backend, Job_ids_K_I, file_name=file_name)
-    exp_q_R = calculate_statistics(backend, Job_ids_q_R, file_name=file_name)
-    exp_q_I = calculate_statistics(backend, Job_ids_q_I, file_name=file_name)
+        Job_ids_K_R = []
+        Job_ids_K_I = []
+        Job_ids_q_R = []
+        Job_ids_q_I = []
+        for t_1 in range(T):
+            for t_2 in range(T):
+                # Uniform distribution of the shots
+                for k_1 in range(K):
+                    for k_2 in range(K):
+                        q_pow = - Ansatz_pows[t_1] - C_pows[k_1] + C_pows[k_2] + Ansatz_pows[t_2]
+                        backend, jobid_R = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access, shots=shots)
+                        backend, jobid_I = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access, shots=shots)
+                        Job_ids_K_R.append(jobid_R)
+                        Job_ids_K_I.append(jobid_I)
+        for t in range(T):
+            for k in range(K):
+                q_pow = Ansatz_pows[t] + C_pows[k]
+                backend, jobid_R = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access, shots=shots)
+                backend, jobid_I = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access, shots=shots)
+                Job_ids_K_R.append(jobid_R)
+                Job_ids_K_I.append(jobid_I)
 
-    for t_1 in range(T):
-        for t_2 in range(T):
-            # Uniform distribution of the shots
+        exp_K_R = calculate_statistics(backend, Job_ids_K_R, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+        exp_K_I = calculate_statistics(backend, Job_ids_K_I, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+        exp_q_R = calculate_statistics(backend, Job_ids_q_R, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+        exp_q_I = calculate_statistics(backend, Job_ids_q_I, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+
+        for t_1 in range(T):
+            for t_2 in range(T):
+                # Uniform distribution of the shots
+                item = 0
+                for k_1 in range(K):
+                    for k_2 in range(K):
+                        inner_product_real = exp_K_R[t_1 * T * K * K +
+                                                     t_2 * K * K +
+                                                     k_1 * K +
+                                                     k_2]
+                        inner_product_imag = exp_K_I[t_1 * T * K * K +
+                                                     t_2 * K * K +
+                                                     k_1 * K +
+                                                     k_2]
+                        inner_product = inner_product_real - inner_product_imag * 1j
+                        item += conj(C_coeffs[k_1]) * C_coeffs[k_2] * inner_product
+                V_dagger_V[t_1][t_2] = item
+
+        R = real(V_dagger_V)
+        I = imag(V_dagger_V)
+
+        q = zeros((T, 1), dtype='complex128')
+        for t in range(T):
             item = 0
-            for k_1 in range(K):
-                for k_2 in range(K):
-                    inner_product_real = exp_K_R[t_1 * T * K * K +
-                                                 t_2 * K * K +
-                                                 k_1 * K +
-                                                 k_2]
-                    inner_product_imag = exp_K_I[t_1 * T * K * K +
-                                                 t_2 * K * K +
-                                                 k_1 * K +
-                                                 k_2]
-                    inner_product = inner_product_real - inner_product_imag * 1j
-                    item += conj(C_coeffs[k_1]) * C_coeffs[k_2] * inner_product
-            V_dagger_V[t_1][t_2] = item
+            for k in range(K):
+                inner_product_real = exp_q_R[t * K + k]
+                inner_product_imag = exp_q_I[t * K + k]
+                inner_product = inner_product_real - inner_product_imag * 1j
+                item += C_coeffs[k] * inner_product
+            q[t][0] = item
 
-    R = real(V_dagger_V)
-    I = imag(V_dagger_V)
+    else:
+        for t_1 in range(T):
+            for t_2 in range(T):
+                item = 0
+                # Uniform distribution of the shots
+                for k_1 in range(K):
+                    for k_2 in range(K):
+                        q_pow = - Ansatz_pows[t_1] - C_pows[k_1] + C_pows[k_2] + Ansatz_pows[t_2]
+                        backend, inner_product_real = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access, shots=shots, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+                        backend, inner_product_imag = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access, shots=shots, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+                        inner_product = inner_product_real - inner_product_imag * 1j
+                        item += conj(C_coeffs[k_1]) * C_coeffs[k_2] * inner_product
+                V_dagger_V[t_1][t_2] = item
 
-    q = zeros((T, 1), dtype='complex128')
-    for t in range(T):
-        item = 0
-        for k in range(K):
-            inner_product_real = exp_q_R[t * K + k]
-            inner_product_imag = exp_q_I[t * K + k]
-            inner_product = inner_product_real - inner_product_imag * 1j
-            item += C_coeffs[k] * inner_product
-        q[t][0] = item
+        R = real(V_dagger_V)
+        I = imag(V_dagger_V)
+
+        q = zeros((T, 1), dtype='complex128')
+        for t in range(T):
+            item = 0
+            for k in range(K):
+                q_pow = Ansatz_pows[t] + C_pows[k]
+                backend, inner_product_real = Hadamard_test_QFT(U_b, q_pow, alpha=1, access=access, shots=shots, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+                backend, inner_product_imag = Hadamard_test_QFT(U_b, q_pow, alpha=1j, access=access, shots=shots, Pauli_mitigate=Pauli_mitigate, file_name=file_name)
+                inner_product = inner_product_real - inner_product_imag * 1j
+                item += C_coeffs[k] * inner_product
+            q[t][0] = item
 
     # W     =      R    -I
     #       =      I     R
