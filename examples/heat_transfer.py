@@ -24,7 +24,7 @@
 """
 
 from circulant_solver.circulant import Circulant
-from circulant_solver.algo import cqs_circulant_main
+from main import cqs_circulant_main
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
