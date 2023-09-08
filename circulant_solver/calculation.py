@@ -6,7 +6,7 @@ __all__ = [
 ]
 
 
-def calculate_W_r(C, b, Ansatz_pows, access=None, shots=1024):
+def calculate_W_r(C, Ansatz_pows, ip: InnerProduct):
     r"""
         Calculate the auxiliary system W and r defined in our paper.
     """
@@ -18,7 +18,6 @@ def calculate_W_r(C, b, Ansatz_pows, access=None, shots=1024):
     V_I = np.zeros((T, T), dtype=np.float64)
     q_R = np.zeros((T, 1), dtype=np.float64)
     q_I = np.zeros((T, 1), dtype=np.float64)
-    ip = InnerProduct(access, b, K, T, shots)
     for t_1 in range(T):
         for t_2 in range(T):
             for k_1 in range(K):

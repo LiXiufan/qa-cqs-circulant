@@ -29,6 +29,8 @@ import numpy as np
 import sys
 from qiskit import QuantumRegister, QuantumCircuit
 from time import strftime, localtime
+from functools import partial
+from multiprocessing import Pool
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -71,23 +73,19 @@ print(U_b)
 
 # Simulation / hardware access
 # access = "true"
-# access = "qiskit-aer"
+access = "qiskit-aer"
 # access = 'ibmq-statevector'
-access = 'ibmq-perth'
+# access = 'ibmq-perth'
 # access = "sample"
 
 # Truncated threshold T
 T = 6
 # Record file
 log_file = f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
-loss_list = []
-results_list = []
-T_List = []
-for t in range(1, T + 1):
-    T_List.append(t)
-    loss, results = cqs_circulant_main(C, U_b, t, access=access, shots=shots, logfile=log_file)
-    loss_list.append(loss)
-    results_list.append(results)
+T_List = list(range(1, T + 1))
+output = cqs_circulant_main(C, U_b, T_List, access, shots, log_file)
+loss_list = [item[0] for item in output]
+results_list = [item[1] for item in output]
 
 plt.title("CQS: Loss - Depth", fontsize=10)
 plt.plot(T_List, loss_list, 'g-', linewidth=2.5, label='Loss Function - Iteration')

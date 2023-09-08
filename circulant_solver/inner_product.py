@@ -20,7 +20,7 @@ class InnerProduct():
         self.access = access
         self.shots = shots
         self.b = b
-        self.power = term_number + threshold - 2
+        self.power = 2*term_number + 2*threshold
         self.pos_inner_product_real = np.empty(self.power, dtype=np.float64)
         self.pos_inner_product_imag = np.empty(self.power, dtype=np.float64)
         self.neg_inner_product_real = np.empty(self.power, dtype=np.float64)
@@ -108,7 +108,7 @@ class InnerProduct():
                                 handlers=[logging.FileHandler(f"queue_{start.strftime('%Y%m%d%H%M%S')}.log"),
                                           logging.StreamHandler()])
             logging.warning(f"access: {self.access}, shots: {self.shots}, power:{self.power}")
-            time.sleep(0.1)
+            time.sleep(self.power*0.1)
             counter = len(promise_queue)
             while len(promise_queue) > 0:
                 job = promise_queue.pop()
