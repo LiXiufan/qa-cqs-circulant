@@ -1,4 +1,5 @@
-from typing import Union
+import numpy as np
+from typing import Union, Tuple, Dict
 from qiskit import QuantumCircuit, QuantumRegister, execute, Aer
 from qiskit.quantum_info import Statevector
 from qiskit.providers import JobStatus
@@ -11,8 +12,7 @@ __all__ = [
 
 
 class InnerProduct():
-    def __init__(self, access: str, b: Union[np.ndarray, QuantumCircuit], term_number: int, threshold: int,
-                 shots: int = 1024):
+    def __init__(self, access:str, b: Union[np.ndarray, QuantumCircuit, Tuple[Dict[int, complex], int]], term_number: int, threshold: int, shots: int=1024):
         self.access = access
         self.shots = shots
         self.b = b
@@ -21,7 +21,8 @@ class InnerProduct():
         self.pos_inner_product_imag = np.empty(self.power, dtype=np.float64)
         self.neg_inner_product_real = np.empty(self.power, dtype=np.float64)
         self.neg_inner_product_imag = np.empty(self.power, dtype=np.float64)
-        if not self.access == "true" and not self.access == "sample":
+        self.non_q = ["true", "sample", "sparse"]
+        if self.access not in self.non_q:
             self.backend = get_backend(self.access)
         self._calculate_inner_product()
 
@@ -40,7 +41,14 @@ class InnerProduct():
             return self.neg_inner_product_imag[-(q_pow) - 1]
 
     def _calculate_inner_product(self):
-        if self.access == "true" or self.access == "sample":
+        if self.access == "sparse":
+            if not isinstance(self.b, tuple):
+                raise NotImplementedError("sparse mode is used with input Tuple[Dict[idx, value], size]")
+            dict_b, size = self.b
+            for i in range(self.power):
+                self.pos_inner_product_real[i], self.pos_inner_product_imag[i] = sparse_inner_product(dict_b, i+1, size)
+                self.neg_inner_product_real[i], self.neg_inner_product_imag[i] = sparse_inner_product(dict_b, -(i+1), size)
+        elif self.access == "true" or self.access == "sample":
             if isinstance(self.b, np.ndarray):
                 vec_b = self.b
             else:

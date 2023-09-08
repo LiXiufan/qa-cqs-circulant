@@ -35,7 +35,7 @@ np.set_printoptions(threshold=sys.maxsize)
 # Set the number of permutations in the circulant matrix C
 number_of_terms = 3
 # shot budget per Hadamard test
-shots = 10 ** 5
+shots = 10 ** 3
 # Set the '\xi' parameter
 xi = 0.2
 # Initialize the circulant matrix
@@ -77,13 +77,13 @@ access = "qiskit-aer"
 # Truncated threshold T
 T = 6
 # Record file
-file_name = 'cqs_circulant_example_1'
+log_file= f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
 loss_list = []
 results_list = []
 T_List = []
 for t in range(1, T + 1):
     T_List.append(t)
-    loss, results = cqs_circulant_main(C, U_b, t, access=access, shots=shots)
+    loss, results = cqs_circulant_main(C, U_b, t, access=access, shots=shots, logfile=log_file)
     loss_list.append(loss)
     results_list.append(results)
 
@@ -95,4 +95,4 @@ lgd.set_title("Legend")
 plt.xticks(T_List, T_List)
 plt.xlabel("Truncated Threshold", fontsize=10)
 plt.ylabel("Loss", fontsize=10)
-plt.show()
+plt.savefig(f"{log_file}.png")
