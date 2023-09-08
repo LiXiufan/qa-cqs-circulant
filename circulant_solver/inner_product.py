@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 import numpy as np
 from typing import Union, Tuple, Dict
 from qiskit import QuantumCircuit, QuantumRegister, execute, Aer
@@ -5,6 +8,7 @@ from qiskit.quantum_info import Statevector
 from qiskit.providers import JobStatus
 from circulant_solver.dot_compute import *
 from circulant_solver.util import get_backend
+import logging
 
 __all__ = [
     "InnerProduct"
@@ -98,15 +102,32 @@ class InnerProduct():
                 pi.append(pos_imag)
                 nr.append(neg_real)
                 ni.append(neg_imag)
+
+            start = datetime.now()
+            logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING,
+                                handlers=[logging.FileHandler(f"queue_{start.strftime('%Y%m%d%H%M%S')}.log"),
+                                          logging.StreamHandler()])
+            logging.warning(f"access: {self.access}, shots: {self.shots}, power:{self.power}")
+            time.sleep(0.1)
+            counter = len(promise_queue)
             while len(promise_queue) > 0:
                 job = promise_queue.pop()
                 status = job.status()
+                counter -= 1
                 if status == JobStatus.ERROR:
                     raise RuntimeError("Job failed.")
                 elif status == JobStatus.CANCELLED:
                     raise RuntimeError("Job cancelled.")
-                elif status != JobStatus.DONE:
+                elif status == JobStatus.DONE:
+                    logging.warning(f'Remaining jobs:{len(promise_queue)}')
+                    counter = len(promise_queue)
+                else:
                     promise_queue.append(job)
+                    if counter == 0:
+                        counter = len(promise_queue)
+                        logging.warning('Waiting time: {:.2f} hours'.format((datetime.now() - start).seconds/3600.0))
+                        time.sleep(60*15)
+            logging.warning('Queue cleared; total time: {:.2f} hours'.format((datetime.now() - start).seconds/3600.0))
             for i in range(self.power):
                 self.pos_inner_product_real[i] = eval_promise(pr[i])
                 self.pos_inner_product_imag[i] = -eval_promise(pi[i])

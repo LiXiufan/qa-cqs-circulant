@@ -6,6 +6,7 @@ __all__ = [
     "cqs_circulant_main"
 ]
 
+from circulant_solver.logger import log
 from circulant_solver.calculation import calculate_W_r
 from circulant_solver.optimization import solve_combination_parameters
 

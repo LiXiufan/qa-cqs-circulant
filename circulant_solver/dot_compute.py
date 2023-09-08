@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Dict
 from qiskit import QuantumCircuit, transpile
 from qiskit import QuantumRegister, ClassicalRegister
 from qiskit.circuit import Operation
@@ -9,18 +9,16 @@ from qiskit.providers import JobV1, Backend
 __all__ = [
     "sample_inner_product",
     "true_inner_product",
-    "quantum_inner_product_promise"
+    "sparse_inner_product",
+    "quantum_inner_product_promise",
+    "eval_promise"
 ]
 
 
 def sample_inner_product(vec_b: np.ndarray, q_pow: int, shots: int = 1024) -> Tuple[float, float]:
     b_prod = np.abs(vec_b) ** 2
     samples = np.random.choice(b_prod.size, size=shots, p=b_prod)
-    shift = samples - q_pow
-    if shift >= len(vec_b):
-        shift -= len(vec_b)
-    if shift < -len(vec_b):
-        shift += len(vec_b)
+    shift = (samples - q_pow) % vec_b.size
     num = vec_b[shift]
     dem = vec_b[samples]
     result = np.average(num / dem)
@@ -35,7 +33,7 @@ def true_inner_product(vec_b: np.ndarray, q_pow: int) -> Tuple[float, float]:
 
 def sparse_inner_product(dict_b: Dict[int, complex], q_pow:int, size: int) -> Tuple[float, float]:
     result = 0
-    for idx, value in dict_b.entries():
+    for idx, value in dict_b.items():
         shifted_idx = idx - q_pow
         if shifted_idx >= size:
             shifted_idx -= size

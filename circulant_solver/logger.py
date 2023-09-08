@@ -16,14 +16,16 @@ def log(C:Circulant, U_b, W, r, T, alpha, loss, access, shots, log_file):
         result = job.result()
         mat = result.get_unitary(U_b, decimals=16)
         vec_b = np.transpose(mat)[0]
+        repr_b = str(U_b.draw("latex_source"))
     elif isinstance(U_b, np.ndarray):
         vec_b = U_b
+        repr_b = str(vec_b)
     else:
         raise NotImplementedError
     dim = vec_b.size
     c_coeff = dict(zip(C.get_pows(), C.get_coeffs()))
     c_mat = C.get_matrix(dim)
-    b_shift = np.zeros((2*T+1, dim))
+    b_shift = np.zeros((2*T+1, dim), dtype=np.complex128)
     for idx, q_pow in enumerate(range(-T, T+1)):
         b_shift[idx] = np.roll(vec_b, q_pow)
     alpha = np.array(alpha)
@@ -32,7 +34,7 @@ def log(C:Circulant, U_b, W, r, T, alpha, loss, access, shots, log_file):
     with open(log_file+".txt", 'a') as fp:
         fp.write(f"{c_coeff}-{T}\n\n")
         fp.write(f"C_coeff\n{c_coeff}\n\n")
-        fp.write(f"U_b\n{str(U_b)}\n\n")
+        fp.write(f"U_b\n{repr_b}\n\n")
         fp.write(f"W\n{str(W)}\n\n")
         fp.write(f"r\n{str(r)}\n\n")
         fp.write(f"Threshold T\n{T}\n\n")
@@ -44,7 +46,7 @@ def log(C:Circulant, U_b, W, r, T, alpha, loss, access, shots, log_file):
         fp.write(f"shots \n{shots}\n\n")
     output = {}
     output["C_coeff"] = c_coeff
-    output["U_b"] = str(U_b)
+    output["U_b"] = repr_b
     output["W"] = str(W)
     output["r"] = str(r)
     output["T"] = T
