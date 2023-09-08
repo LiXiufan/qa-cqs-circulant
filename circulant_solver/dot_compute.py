@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Dict
 from qiskit import QuantumCircuit, transpile
 from qiskit import QuantumRegister, ClassicalRegister
 from qiskit.circuit import Operation
@@ -9,14 +9,17 @@ from qiskit.providers import JobV1, Backend
 __all__ = [
     "sample_inner_product",
     "true_inner_product",
-    "quantum_inner_product_promise"
+    "sparse_inner_product",
+    "quantum_inner_product_promise",
+    "eval_promise"
 ]
 
 
 def sample_inner_product(vec_b: np.ndarray, q_pow: int, shots: int = 1024) -> Tuple[float, float]:
     b_prod = np.abs(vec_b) ** 2
     samples = np.random.choice(b_prod.size, size=shots, p=b_prod)
-    num = vec_b[(samples - q_pow) % len(vec_b)]
+    shift = (samples - q_pow) % vec_b.size
+    num = vec_b[shift]
     dem = vec_b[samples]
     result = np.average(num / dem)
     return np.real(result), np.imag(result)
@@ -28,6 +31,17 @@ def true_inner_product(vec_b: np.ndarray, q_pow: int) -> Tuple[float, float]:
     result = np.dot(b_conj, b_shift)
     return np.real(result), np.imag(result)
 
+def sparse_inner_product(dict_b: Dict[int, complex], q_pow:int, size: int) -> Tuple[float, float]:
+    result = 0
+    for idx, value in dict_b.items():
+        shifted_idx = idx - q_pow
+        if shifted_idx >= size:
+            shifted_idx -= size
+        if shifted_idx < -size:
+            shifted_idx += size
+        if shifted_idx in dict_b:
+            result += np.conj(value) * dict_b[shifted_idx]
+    return np.real(result), np.imag(result)
 
 def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Backend, q_pow: int, imag: bool = False,
                                   shots: int = 1024) -> JobV1:

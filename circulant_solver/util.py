@@ -16,7 +16,12 @@ def get_permutation_matrix(dim: int, p: int):
     """
     Q = np.zeros((dim, dim))
     for k in range(0, dim):
-        Q[k][k - p] = 1
+        s = k-p
+        if s >= dim:
+            s -= dim
+        if s <= -dim:
+            s += dim
+        Q[k][s] = 1
     return Q
 
 
