@@ -5,6 +5,7 @@ __all__ = [
     "Circulant"
 ]
 
+
 class Circulant:
     r"""Set the ``C`` circulant matrix.
 
@@ -21,6 +22,7 @@ class Circulant:
     Attributes:
         term_number (int): number of decomposition terms
     """
+
     def __init__(self, term_number, permu_pows, coeffs):
         r"""Set the ``C`` circulant matrix.
 

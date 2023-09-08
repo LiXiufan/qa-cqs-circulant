@@ -16,12 +16,17 @@ import numpy as np
 from cvxopt import matrix
 from cvxopt.solvers import qp
 
+__all__ = [
+    "solve_combination_parameters"
+]
+
+
 def solve_combination_parameters(W, r):
     W = 2 * matrix(W)
     r = (-2) * matrix(r)
     # Solve
     comb_params = qp(W, r, kktsolver='ldl', options={'kktreg': 1e-12})['x']
-    
+
     half_var = int(len(comb_params) / 2)
     results = [0 for _ in range(half_var)]
 
@@ -32,7 +37,6 @@ def solve_combination_parameters(W, r):
     params_array = np.array(comb_params).reshape(-1, 1)
     W_array = np.array(W / 2)
     r_array = np.array(r / (-2)).reshape(-1, 1)
-    loss = abs((np.transpose(params_array) @ W_array @ params_array - 2 * np.transpose(r_array) @ params_array + 1).item())
+    loss = abs(
+        (np.transpose(params_array) @ W_array @ params_array - 2 * np.transpose(r_array) @ params_array + 1).item())
     return loss, results
-
-

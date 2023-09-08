@@ -1,28 +1,36 @@
 import numpy as np
-from typing import Tuple, Dict
+from typing import Tuple
 from qiskit import QuantumCircuit, transpile
 from qiskit import QuantumRegister, ClassicalRegister
 from qiskit.circuit import Operation
 from qiskit.circuit.library import QFT
 from qiskit.providers import JobV1, Backend
 
+__all__ = [
+    "sample_inner_product",
+    "true_inner_product",
+    "quantum_inner_product_promise"
+]
 
-def sample_inner_product(vec_b: np.ndarray, q_pow:int, shots:int=1024) -> Tuple[float, float]:    
-    b_prod = np.abs(vec_b) ** 2 
+
+def sample_inner_product(vec_b: np.ndarray, q_pow: int, shots: int = 1024) -> Tuple[float, float]:
+    b_prod = np.abs(vec_b) ** 2
     samples = np.random.choice(b_prod.size, size=shots, p=b_prod)
     num = vec_b[(samples - q_pow) % len(vec_b)]
     dem = vec_b[samples]
     result = np.average(num / dem)
     return np.real(result), np.imag(result)
 
-def true_inner_product(vec_b: np.ndarray, q_pow:int) -> Tuple[float, float]:
+
+def true_inner_product(vec_b: np.ndarray, q_pow: int) -> Tuple[float, float]:
     b_conj = np.conj(vec_b)
     b_shift = np.roll(vec_b, q_pow)
     result = np.dot(b_conj, b_shift)
     return np.real(result), np.imag(result)
-    
 
-def quantum_inner_product_promise(U_b_gate: Operation, width:int, backend:Backend, q_pow:int, imag: bool=False, shots:int=1024) -> JobV1:
+
+def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Backend, q_pow: int, imag: bool = False,
+                                  shots: int = 1024) -> JobV1:
     ancilla = 1
     q_rot = QuantumRegister(width, 'q')
     q_had = QuantumRegister(width + ancilla, 'q')
@@ -49,6 +57,7 @@ def quantum_inner_product_promise(U_b_gate: Operation, width:int, backend:Backen
     job = backend.run(circuit, shots=shots)
     return job
 
+
 def eval_promise(job: JobV1):
     out_ = job.result()
     count = out_.get_counts()
@@ -69,6 +78,8 @@ def eval_promise(job: JobV1):
     output = p0 - p1
     return output
 
+
+# Test
 if __name__ == "__main__":
-    print(sample_inner_product(np.arange(16)/np.sqrt(1240),2))
-    print(true_inner_product(np.arange(16)/np.sqrt(1240), 2))
+    print(sample_inner_product(np.arange(16) / np.sqrt(1240), 2))
+    print(true_inner_product(np.arange(16) / np.sqrt(1240), 2))
