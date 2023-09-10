@@ -38,7 +38,7 @@ np.set_printoptions(threshold=sys.maxsize)
 # Set the number of permutations in the circulant matrix C
 number_of_terms = 3
 # shot budget per Hadamard test
-shots = 6 * 10 ** 4
+shots = 1e+6
 # Set the '\xi' parameter
 xi = 0.2
 # Initialize the circulant matrix
@@ -48,24 +48,8 @@ C = Circulant(number_of_terms, permu_pows=pows, coeffs=coeffs)
 print('Coefficients of the terms are:', coeffs)
 print('Decomposed powers of permutations are:', pows)
 
-# QAOA Circuit
-n = 5
-d = 1
-theta = [np.pi / (2 ** i) for i in range(1, n + 1)]
-# theta = [np.random.rand() * 2 * np.pi for _ in range(d * n)]
-print(theta)
-qreg_q = QuantumRegister(n, 'q')
+qreg_q = QuantumRegister(3, 'q')
 circuit = QuantumCircuit(qreg_q)
-for i in range(n):
-    circuit.h(qreg_q[i])
-for j in range(d):
-    for i in range(n - 1):
-        circuit.cx(qreg_q[i], qreg_q[i + 1])
-        circuit.rz(theta[i], qreg_q[i + 1])
-        circuit.cx(qreg_q[i], qreg_q[i + 1])
-    circuit.cx(qreg_q[n - 1], qreg_q[0])
-    circuit.rz(theta[n - 1], qreg_q[0])
-    circuit.cx(qreg_q[n - 1], qreg_q[0])
 U_b = circuit
 
 print('The circuit description of U_b is:')
@@ -79,7 +63,7 @@ access = "qiskit-aer"
 # access = "sample"
 
 # Truncated threshold T
-T = 6
+T = 5
 # Record file
 log_file = f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
 T_List = list(range(1, T + 1))

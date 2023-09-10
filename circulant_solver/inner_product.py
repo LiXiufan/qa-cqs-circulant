@@ -6,6 +6,7 @@ from typing import Union, Tuple, Dict
 from qiskit import QuantumCircuit, QuantumRegister, execute, Aer
 from qiskit.quantum_info import Statevector
 from qiskit.providers import JobStatus
+from qiskit_aer import AerSimulator
 from circulant_solver.dot_compute import *
 from circulant_solver.util import get_backend
 import logging
@@ -108,7 +109,6 @@ class InnerProduct():
                                 handlers=[logging.FileHandler(f"queue_{start.strftime('%Y%m%d%H%M%S')}.log"),
                                           logging.StreamHandler()])
             logging.warning(f"access: {self.access}, shots: {self.shots}, power:{self.power}")
-            time.sleep(self.power*0.1)
             counter = len(promise_queue)
             while len(promise_queue) > 0:
                 job = promise_queue.pop()
@@ -123,7 +123,7 @@ class InnerProduct():
                     counter = len(promise_queue)
                 else:
                     promise_queue.append(job)
-                    if counter == 0:
+                    if not isinstance(self.backend, AerSimulator) and counter == 0:
                         counter = len(promise_queue)
                         logging.warning('Waiting time: {:.2f} hours'.format((datetime.now() - start).seconds/3600.0))
                         time.sleep(60*15)

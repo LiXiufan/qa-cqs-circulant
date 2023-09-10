@@ -49,11 +49,12 @@ def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Back
     q_rot = QuantumRegister(width, 'q')
     q_had = QuantumRegister(width + ancilla, 'q')
     c_had = ClassicalRegister(1, 'c')
-    qft_gate = QFT(num_qubits=width, inverse=False, name='qft').to_gate()
+    qft_gate = QFT(num_qubits=width, inverse=False, name='qft', do_swaps=False).to_gate()
     rot_cir = QuantumCircuit(q_rot)
-    Theta = [(2 * (2 ** i) * q_pow * np.pi) / (2 ** width) for i in range(width)]
-    for i in range(width):
-        rot_cir.p(Theta[i], q_rot[i])
+    Theta = [((2 * (2 ** i) * q_pow * np.pi) / (2 ** width)) % (2 * np.pi) for i in range(width)]
+    for i in range(width-1, -1, -1):
+        if Theta[i] != 0:
+            rot_cir.p(Theta[i], q_rot[i])
     rot_cir_gate = rot_cir.to_gate()
     C_rot_cir_gate = rot_cir_gate.control()
 
@@ -68,6 +69,7 @@ def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Back
     Hadamard_circuit.measure([q_had[0]], [c_had[0]])
     # Transpile the circuit for Hadamard test
     circuit = transpile(Hadamard_circuit, backend)
+    print(circuit)
     job = backend.run(circuit, shots=shots)
     return job
 
