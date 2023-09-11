@@ -3,7 +3,8 @@
 """
 
 __all__ = [
-    "cqs_circulant_main"
+    "cqs_circulant_main",
+    'cqs_circulant_cond_main'
 ]
 
 from circulant_solver.logger import log
@@ -31,3 +32,26 @@ def cqs_circulant_main(C:Circulant, U_b, T: Union[int, List[int]], access, shots
             log(C, U_b, W, r, t, alpha, loss, access, shots, logfile)
         results.append((loss, alpha))
     return results
+
+
+def cqs_circulant_cond_main(C:Circulant, U_b, access, shots=1024, logfile=None):
+    # Obtain the Ansatz basis
+    T = 0
+    conv = False
+    while not conv:
+        prev_T = T
+        T += 20
+        max_T = T
+        K = np.max(np.abs(C.get_pows()))
+        ip = InnerProduct(access, U_b, K, max_T, shots)
+        for t in range(prev_T, T):
+            W, r = calculate_W_r(C, list(range(-t, t + 1)), ip)
+            loss, alpha = solve_combination_parameters(W, r)
+            if logfile is not None:
+                log(C, U_b, W, r, t, alpha, loss, access, shots, logfile)
+            if loss < 0.01:
+                conv = True
+                return t
+
+
+

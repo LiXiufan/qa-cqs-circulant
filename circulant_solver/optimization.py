@@ -25,7 +25,7 @@ def solve_combination_parameters(W, r):
     W = 2 * matrix(W)
     r = (-2) * matrix(r)
     # Solve
-    comb_params = qp(W, r, kktsolver='ldl', options={'kktreg': 1e-12})['x']
+    comb_params = qp(W, r, kktsolver='ldl', options={'kktreg': 1e-1})['x']
 
     half_var = int(len(comb_params) / 2)
     results = [0 for _ in range(half_var)]
