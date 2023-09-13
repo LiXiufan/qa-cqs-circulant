@@ -24,7 +24,7 @@ setup(
         'cvxopt',
         "pylatexenc"
     ],
-    python_requires='>=reg=1e-1, 3.8, <reg=1e-1, 3.11',
+    python_requires='>=3.8, <=3.11',
     packages=find_packages(),
     license='Apache License 2.0',
     author='Xiufan Li, Po-Wei Huang',
