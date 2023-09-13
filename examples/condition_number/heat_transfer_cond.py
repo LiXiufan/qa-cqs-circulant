@@ -25,9 +25,6 @@
     In this experiment, we study the relationship between the condition number and the truncation threshold.
     The vector b is set to be tensor product of zero states.
     Experiments are conducted using matrix multiplication to get rid of the shot noise.
-    Impressive discovery is that for this specific task, the truncation threshold is upper bounded by a constant
-    depth of 16 even in the case of large condition numbers.
-    We conjecture that this may be due to the fact that the effective condition number is small in this problem.
 """
 from circulant_solver.circulant import Circulant
 from main import cqs_circulant_cond_main
@@ -47,19 +44,21 @@ shots = 10 ** 6
 # Simulation / hardware access
 access = "true"
 # System size
-N = 5
-qreg_q = QuantumRegister(N, 'q')
-circuit = QuantumCircuit(qreg_q)
-U_b = circuit
-print('The circuit description of U_b is:')
-print(U_b)
+N = 20
+U_b = np.zeros(2 ** N)
+U_b[0] = 1
+# qreg_q = QuantumRegister(N, 'q')
+# circuit = QuantumCircuit(qreg_q)
+# U_b = circuit
+# print('The circuit description of U_b is:')
+# print(U_b)
 
 # We conduct multiple experiments by selecting different '\xi' parameters
 # XI = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0]
-# XI = [0.0001, 0.0002, 0.0005, 0.0008, 0.001, 0.0015, 0.002, 0.005, 0.01,
-#       0.04, 0.07, 0.1, 0.12, 0.15, 0.2, 0.5, 1.0, 2.0]
+XI = [0.0001, 0.0002, 0.0005, 0.0008, 0.001, 0.0015, 0.002, 0.005, 0.01,
+      0.04, 0.07, 0.1, 0.12, 0.15, 0.2, 0.5, 1.0, 2.0]
 # XI = [0.2, 0.5, 1.0]
-XI = [0.0125, 0.013, 0.014, 0.015]
+# XI = [0.0125, 0.013, 0.014, 0.015]
 
 # Record file
 log_file = f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
