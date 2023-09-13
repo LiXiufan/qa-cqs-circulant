@@ -16,11 +16,39 @@ __all__ = [
 
 
 class InnerProduct():
-    def __init__(self, access:str, b: Union[np.ndarray, QuantumCircuit, Tuple[Dict[int, complex], int]], term_number: int, threshold: int, shots: int=1024):
+    r"""Set the inner product class.
+
+    This class records the inner products used for calculating the auxiliary systems W and r.
+    In our code implementation, we calculate all inner products at the first step and
+    record the values into instances of this class. Then we can obtain the values by indexes.
+
+    Attributes:
+        access (str): different access to the backend
+        b (Union[np.ndarray, QuantumCircuit, Tuple[Dict[int, complex], int]]): quantum circuit for preparing b
+        term_number (int): number of decomposition terms
+        threshold (int): truncated threshold of our algorithm
+        shots (int, optional): number of measurements
+    """
+
+    def __init__(self, access: str, b: Union[np.ndarray, QuantumCircuit, Tuple[Dict[int, complex], int]],
+                 term_number: int, threshold: int, shots: int = 1024):
+        r"""Set the inner product class.
+
+        This class records the inner products used for calculating the auxiliary systems W and r.
+        In our code implementation, we calculate all inner products at the first step and
+        record the values into instances of this class. Then we can obtain the values by indexes.
+
+        Args:
+            access (str): different access to the backend
+            b (Union[np.ndarray, QuantumCircuit, Tuple[Dict[int, complex], int]]): quantum circuit for preparing b
+            term_number (int): number of decomposition terms
+            threshold (int): truncation threshold of our algorithm
+            shots (int, optional): number of measurements
+        """
         self.access = access
         self.shots = shots
         self.b = b
-        self.power = term_number + threshold - 2
+        self.power = 2 * term_number + 2 * threshold
         self.pos_inner_product_real = np.empty(self.power, dtype=np.float64)
         self.pos_inner_product_imag = np.empty(self.power, dtype=np.float64)
         self.neg_inner_product_real = np.empty(self.power, dtype=np.float64)
@@ -31,6 +59,16 @@ class InnerProduct():
         self._calculate_inner_product()
 
     def get_inner_product(self, q_pow: int, imag: bool = False):
+        r"""Get the value of an inner product.
+
+        Args:
+            q_pow (int): the power of permutation matrix
+            imag (bool, optional): False: calculate the real part;
+                                   True: calculate the imaginary part
+
+        Returns:
+            float / int: the value of an inner product
+        """
         if q_pow == 0 and not imag:
             return 1
         elif q_pow == 0 and imag:
@@ -45,13 +83,22 @@ class InnerProduct():
             return self.neg_inner_product_imag[-(q_pow) - 1]
 
     def _calculate_inner_product(self):
+        r"""Calculate the inner product according to the access.
+
+        If the access is "sparse", calculate the inner product using the sparce matrix estimator;
+        If the access is "true", calculate the inner product using the matrix multiplication estimator;
+        If the access is "sample", calculate the inner product using sampling and querying estimator;
+        Else, calculate the inner product using the Hadamard test with backends provided by Qiskit;
+        """
         if self.access == "sparse":
             if not isinstance(self.b, tuple):
                 raise NotImplementedError("sparse mode is used with input Tuple[Dict[idx, value], size]")
             dict_b, size = self.b
             for i in range(self.power):
-                self.pos_inner_product_real[i], self.pos_inner_product_imag[i] = sparse_inner_product(dict_b, i+1, size)
-                self.neg_inner_product_real[i], self.neg_inner_product_imag[i] = sparse_inner_product(dict_b, -(i+1), size)
+                self.pos_inner_product_real[i], self.pos_inner_product_imag[i] = sparse_inner_product(dict_b, i + 1,
+                                                                                                      size)
+                self.neg_inner_product_real[i], self.neg_inner_product_imag[i] = sparse_inner_product(dict_b, -(i + 1),
+                                                                                                      size)
         elif self.access == "true" or self.access == "sample":
             if isinstance(self.b, np.ndarray):
                 vec_b = self.b
@@ -108,7 +155,7 @@ class InnerProduct():
                                 handlers=[logging.FileHandler(f"queue_{start.strftime('%Y%m%d%H%M%S')}.log"),
                                           logging.StreamHandler()])
             logging.warning(f"access: {self.access}, shots: {self.shots}, power:{self.power}")
-            time.sleep(0.1)
+            time.sleep(self.power * 0.1)
             counter = len(promise_queue)
             while len(promise_queue) > 0:
                 job = promise_queue.pop()
@@ -125,9 +172,9 @@ class InnerProduct():
                     promise_queue.append(job)
                     if counter == 0:
                         counter = len(promise_queue)
-                        logging.warning('Waiting time: {:.2f} hours'.format((datetime.now() - start).seconds/3600.0))
-                        time.sleep(60*15)
-            logging.warning('Queue cleared; total time: {:.2f} hours'.format((datetime.now() - start).seconds/3600.0))
+                        logging.warning('Waiting time: {:.2f} hours'.format((datetime.now() - start).seconds / 3600.0))
+                        time.sleep(60 * 15)
+            logging.warning('Queue cleared; total time: {:.2f} hours'.format((datetime.now() - start).seconds / 3600.0))
             for i in range(self.power):
                 self.pos_inner_product_real[i] = eval_promise(pr[i])
                 self.pos_inner_product_imag[i] = -eval_promise(pi[i])

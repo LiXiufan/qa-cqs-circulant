@@ -1,7 +1,17 @@
 # !/usr/bin/env python3
+import numpy as np
+from cvxopt import matrix
+from cvxopt.solvers import qp
+from typing import List, Tuple
 
-"""
-    Optimization module for solving the optimal combination parameters.
+__all__ = [
+    "solve_combination_parameters"
+]
+
+
+def solve_combination_parameters(W: np.ndarray, r: np.ndarray) -> Tuple[float, List]:
+    r"""Optimization module for solving the optimal combination parameters.
+
     In this module, we implement the CVXOPT package as an external resource package.
     CVXOPT is a free software package for convex optimization based on the Python programming language.
     Reference: https://cvxopt.org
@@ -11,20 +21,17 @@
                 min    1/2  x^T P x + q^T x
           subject to   Gx  <=  h
                        Ax  =  b
-"""
-import numpy as np
-from cvxopt import matrix
-from cvxopt.solvers import qp
 
-__all__ = [
-    "solve_combination_parameters"
-]
+    Args:
+        W (np.ndarray): the auxiliary matrix W
+        r (np.ndarray): the auxiliary vector r
 
-
-def solve_combination_parameters(W, r):
+    Returns:
+        Tuple[float, List]: loss and the optimal combination parameters
+    """
     W = 2 * matrix(W)
     r = (-2) * matrix(r)
-    # Solve
+    # Solve the optimization problem using the kkt solver with regularization constant of 1e-12
     comb_params = qp(W, r, kktsolver='ldl', options={'kktreg': 1e-12})['x']
 
     half_var = int(len(comb_params) / 2)
