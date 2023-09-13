@@ -16,6 +16,16 @@ __all__ = [
 
 
 def sample_inner_product(vec_b: np.ndarray, q_pow: int, shots: int = 1024) -> Tuple[float, float]:
+    r"""Estimate the inner products by sampling and querying.
+
+    Args:
+        vec_b (np.ndarray): vector b
+        q_pow (int): the power of permutation matrix
+        shots (int, optional): number of measurements
+
+    Returns:
+        Tuple[float, float]: real and imaginary part of the inner product
+    """
     b_prod = np.abs(vec_b) ** 2
     samples = np.random.choice(b_prod.size, size=shots, p=b_prod)
     shift = (samples - q_pow) % vec_b.size
@@ -26,12 +36,32 @@ def sample_inner_product(vec_b: np.ndarray, q_pow: int, shots: int = 1024) -> Tu
 
 
 def true_inner_product(vec_b: np.ndarray, q_pow: int) -> Tuple[float, float]:
+    r"""Estimate the inner products by matrix multiplication.
+
+    Args:
+        vec_b (np.ndarray): vector b
+        q_pow (int): the power of permutation matrix
+
+    Returns:
+        Tuple[float, float]: real and imaginary part of the inner product
+    """
     b_conj = np.conj(vec_b)
     b_shift = np.roll(vec_b, q_pow)
     result = np.dot(b_conj, b_shift)
     return np.real(result), np.imag(result)
 
-def sparse_inner_product(dict_b: Dict[int, complex], q_pow:int, size: int) -> Tuple[float, float]:
+
+def sparse_inner_product(dict_b: Dict[int, complex], q_pow: int, size: int) -> Tuple[float, float]:
+    r"""Estimate the inner products by simple shifting the elements.
+
+    Args:
+        dict_b (Dict[int, complex]): vector b
+        q_pow (int): the power of permutation matrix
+        size (int): the size of the matrix
+
+    Returns:
+        Tuple[float, float]: real and imaginary part of the inner product
+    """
     result = 0
     for idx, value in dict_b.items():
         shifted_idx = idx - q_pow
@@ -43,8 +73,23 @@ def sparse_inner_product(dict_b: Dict[int, complex], q_pow:int, size: int) -> Tu
             result += np.conj(value) * dict_b[shifted_idx]
     return np.real(result), np.imag(result)
 
+
 def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Backend, q_pow: int, imag: bool = False,
                                   shots: int = 1024) -> JobV1:
+    r"""Estimate the inner products by Hadamard test.
+
+    Args:
+        U_b_gate (Operation): the unitary circuit used to prepare the vector b
+        width (int): width of the circuit
+        backend (Backend): the backend supported on Qiskit
+        q_pow (int): the power of permutation matrix
+        imag (bool, optional): False: calculate the real part;
+                               True: calculate the imaginary part
+        shots (int, optional): number of measurements
+
+    Returns:
+        JobV1: submitted job corresponding to the Hadamard test task
+    """
     ancilla = 1
     q_rot = QuantumRegister(width, 'q')
     q_had = QuantumRegister(width + ancilla, 'q')
@@ -74,7 +119,18 @@ def quantum_inner_product_promise(U_b_gate: Operation, width: int, backend: Back
     return job
 
 
-def eval_promise(job: JobV1):
+def eval_promise(job: JobV1) -> float:
+    r"""Retrieve the results of submitted job.
+
+    The waiting list might be extremely long in terms of real hardware experiments.
+    To improve the efficiency, the user can submit the jobs in parallel and retrieve the results later.
+
+    Args:
+        job (JobV1): submitted job corresponding to the Hadamard test task
+
+    Returns:
+        float: the estimation of the inner product by statistics
+    """
     out_ = job.result()
     count = out_.get_counts()
     new_count = {'0': 0, '1': 0}
