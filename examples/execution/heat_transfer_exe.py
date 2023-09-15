@@ -50,7 +50,7 @@ print("Coefficients of the terms are:", coeffs)
 print("Decomposed powers of permutations are:", pows)
 
 # Circuit for preparation of b
-n = 3
+n = 5
 qreg_q = QuantumRegister(n, 'q')
 circuit = QuantumCircuit(qreg_q)
 # Choose the circuit type
@@ -85,8 +85,8 @@ else:
     raise ValueError
 
 # Simulation / hardware access
-access = "true"
-# access = "qiskit-aer"
+# access = "true"
+access = "qiskit-aer"
 # access = 'ibmq-statevector'
 # access = 'ibmq-perth'
 # access = "sample"
@@ -94,15 +94,20 @@ access = "true"
 # Truncated threshold T
 T = 6
 # Record file
-log_file = f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
+# log_file = f"heat_transfer_{strftime('%Y%m%d%H%M%S', localtime())}"
+# Close the logging file
+log_file = None
 
 # Use the algorithm to solve the circulant linear systems
 T_List = list(range(1, T + 1))
-output = cqs_circulant_main(C, U_b, T_List, access, shots, log_file)
+print("Truncation thresholds are:", T_List)
+output = cqs_circulant_main(C, U_b, T_List, access, shots, logfile=log_file)
 
 # Get the loss and results
 loss_list = [item[0] for item in output]
+print("Loss for each truncation threshold:", loss_list)
 results_list = [item[1] for item in output]
+print("The results are:", loss_list)
 
 # Plot and record the results
 plt.title("Figure: Loss - truncation threshold", fontsize=10)
@@ -112,4 +117,5 @@ lgd.set_title("Legend")
 plt.xticks(T_List, T_List)
 plt.xlabel("Truncation threshold", fontsize=10)
 plt.ylabel("Loss", fontsize=10)
-plt.savefig(f"{log_file}.png")
+plt.show()
+# plt.savefig(f"{log_file}.png")
