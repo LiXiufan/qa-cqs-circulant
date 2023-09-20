@@ -49,16 +49,13 @@ qreg_q = QuantumRegister(n, 'q')
 circuit = QuantumCircuit(qreg_q)
 # Choose the circuit type
 # cir_b = 'QAOA'
-# cir_b = 'identity'
-cir_b = 'dict'
+cir_b = 'identity'
 # cir_b = 'vector'
 if cir_b == 'QAOA':
     d = 1
     theta = [np.pi / (2 ** i) for i in range(1, n + 1)]
     print("The rotation parameters for QAOA circuit are:", theta)
     # QAOA embedding
-    for i in range(n):
-        circuit.x(qreg_q[i])
     for i in range(n):
         circuit.h(qreg_q[i])
     for j in range(d):
@@ -76,8 +73,6 @@ elif cir_b == 'identity':
     U_b = circuit
     print('The circuit description of U_b is:')
     print(U_b)
-elif cir_b == 'dict':
-    U_b = ({0: 1}, 2 ** n)
 elif cir_b == 'vector':
     U_b = np.zeros(2 ** n)
 else:

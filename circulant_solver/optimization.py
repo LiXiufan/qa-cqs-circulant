@@ -32,6 +32,8 @@ def solve_combination_parameters(W: np.ndarray, r: np.ndarray) -> Tuple[float, L
     W = 2 * matrix(W)
     r = (-2) * matrix(r)
     # Solve the optimization problem using the kkt solver with regularization constant of 1e-12
+    # Note: for more realistic experiments, due to the erroneous results,
+    # it is suggested to change the regularization constant to get a better performance.
     comb_params = qp(W, r, kktsolver='ldl', options={'kktreg': 1e-12})['x']
 
     half_var = int(len(comb_params) / 2)
