@@ -31,7 +31,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 from qiskit import QuantumRegister, QuantumCircuit
-from time import strftime, localtime
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -39,7 +38,7 @@ np.set_printoptions(threshold=sys.maxsize)
 # Set the number of permutations in the circulant matrix C
 number_of_terms = 3
 # shot budget per Hadamard test
-shots = 10 ** 6
+shots = 6 * 10 ** 4
 # Set the '\xi' parameter
 xi = 0.2
 # Initialize the circulant matrix
@@ -60,10 +59,8 @@ cir_b = 'QAOA'
 if cir_b == 'QAOA':
     d = 1
     theta = [np.pi / (2 ** i) for i in range(1, n + 1)]
-    print("The rotation parameters for QAOA circuit are:", theta)
+    print("The rotation parameters of QAOA embedding circuit are:", theta)
     # QAOA embedding
-    for i in range(n):
-        circuit.x(qreg_q[i])
     for i in range(n):
         circuit.h(qreg_q[i])
     for j in range(d):
