@@ -3,7 +3,7 @@ This repository is for numerical experiments of the algorithm solving banded cir
 
 For feedback, please contact Xiufan at: e1117166@u.nus.edu.
 
-# !New Release! Our paper has been accepted by _New Journal of Physics_, 2025, Dec. 30. Great thanks to @georgepwhuang for huge contributions!
+## !New Release! Our paper has been accepted by _New Journal of Physics_, 2025, Dec. 30. Great thanks to @georgepwhuang for huge contributions!
 
 For BibTeX citations, please copy the following notes:
 @article{10.1088/1367-2630/ae3205,
