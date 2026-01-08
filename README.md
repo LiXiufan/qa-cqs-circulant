@@ -6,6 +6,7 @@ For feedback, please contact Xiufan at: e1117166@u.nus.edu.
 ## New Release! Our paper has been accepted by _New Journal of Physics_, 2025, Dec. 30. Great thanks to @georgepwhuang for huge contributions!
 
 For BibTeX citations, please copy the following notes:
+
 @article{10.1088/1367-2630/ae3205,
 	author={Huang, Po-Wei and Li, Xiufan and Koor, Kelvin and Rebentrost, Frank Patrick},
 	title={Classical combinations of quantum states for solving banded circulant linear systems},
